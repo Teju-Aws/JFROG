@@ -1,0 +1,38 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Teju-Aws/project-1-maven-jenkins-CICD-docker-eks-.git'
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Artifactory Upload') {
+            steps {
+                script {
+                    def server = Artifactory.server('JFROG')     // uses JFROG instance + credentials
+                    server.credentialsId = 'JFROG'               // optional but forces authentication
+
+                    def uploadSpec = """{
+                        "files": [
+                            {
+                                "pattern": "webapp/target/*.war",
+                                "target": "test/"
+                            }
+                        ]
+                    }"""
+
+                    server.upload(uploadSpec)  // upload with credentials
+                }
+            }
+        }
+    }
+}    
