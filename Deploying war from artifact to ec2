@@ -1,0 +1,39 @@
+pipeline {
+    agent any
+
+    stages {
+
+        stage('Checkout Source Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Teju-Aws/project-1-maven-jenkins-CICD-docker-eks-.git'
+            }
+        }
+
+        stage('Maven Build') {
+            steps {
+                sh 'mvn clean install'
+            }
+        }
+
+        stage('Deploy WAR from Artifactory to EC2') {
+            steps {
+                sh '''
+                    echo "Downloading WAR from Artifactory..."
+                    wget --http-user=admin --http-password='Tejuaws@123' \
+                        -O /tmp/webapp.war "http://15.206.213.185:8082/artifactory/test/webapp.war"
+
+                    echo "Creating deployment folder if it doesn't exist..."
+                    mkdir -p /tmp/deployments
+
+                    echo "Copying WAR to deployment folder..."
+                    cp /tmp/webapp.war /tmp/deployments/
+
+                    echo "Listing files in deployment folder:"
+                    ls -l /tmp/deployments
+
+                    echo "WAR file deployed successfully to /tmp/deployments"
+                '''
+            }
+        }
+    }
+}
